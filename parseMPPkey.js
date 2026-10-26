@@ -6,6 +6,6 @@ function parseKey(key) {
     return {
         key: exec[1],
         isSharp: exec[2] === 's',
-        octave: parseInt(exec[3])
+        octave: parseInt(exec[3]) + 1,
     };
 }
