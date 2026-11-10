@@ -93,6 +93,6 @@ function stringify(value, tabs, tabChar = " ") {
 			return value.toString();
 
 		default:
-			return "idfk this should be unreachable";
+			throw new Error(`Unknown type "${typeof value}"`);
 	}
 }
