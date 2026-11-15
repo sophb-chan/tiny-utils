@@ -50,21 +50,16 @@ function stringify(value, tabs, tabChar = " ") {
 				"prototype",
 			);
 			const nativeStringified = value.toString();
-			const bodyContent = nativeStringified.slice(
-				nativeStringified.indexOf("{") + 1,
-				nativeStringified.lastIndexOf("}"),
-			);
+			const bodyContent = Boolean(descriptor)
+				? nativeStringified.slice(
+					nativeStringified.indexOf("{") + 1,
+					nativeStringified.lastIndexOf("}"),
+				)
+				: nativeStringified.split('=>')[1].trim();
 			if (!descriptor) {
 				// arrow function
-				const header = nativeStringified.slice(
-					0,
-					nativeStringified.indexOf("{"),
-				);
-				const args = header.slice(
-					header.indexOf("("),
-					header.lastIndexOf(")"),
-				);
-				return `(${args}) => {${bodyContent}}`;
+				const args = nativeStringified.split('=>')[0].trim();
+				return `${args} => ${bodyContent}`;
 			} else if (descriptor.writable) {
 				// function
 				const header = nativeStringified.slice(
@@ -72,7 +67,7 @@ function stringify(value, tabs, tabChar = " ") {
 					nativeStringified.indexOf("{"),
 				);
 				const args = header.slice(
-					header.indexOf("("),
+					header.indexOf("(") + Number(value.name === ''),
 					header.lastIndexOf(")"),
 				);
 				return `function ${value.name}(${args}) {${bodyContent}}`;
@@ -82,8 +77,11 @@ function stringify(value, tabs, tabChar = " ") {
 					/constructor\s*\(([\S\s]*?)\)\s*{([\S\s]*?)}/m;
 				const constructorMatch =
 					constructorRegex.exec(nativeStringified);
-				let args = constructorMatch?.[1] ?? "";
-				return `class ${value.name}(${args}) {${bodyContent}}`;
+				const args = constructorMatch?.[1] ?? "";
+				const parent = Object.getPrototypeOf(value);
+				const extending = parent !== Function.prototype && parent != null ? parent.name : null;
+				const header = [value.name ? value.name : null, extending ? `extends ${extending}` : ''].filter(Boolean).join(' ');
+				return `class ${header ? header + ' ' : ''}{${bodyContent}}`;
 			}
 
 		case "bigint":
